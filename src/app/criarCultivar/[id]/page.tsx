@@ -4,53 +4,59 @@ import "../../../styles/crops/pageCrops.css"
 import "../../../styles/form/form.css"
 import '../../../styles/home/login.css'
 
+
 import Layout from "@/components/layout/layout";
 import InputDefault from "@/components/forms/inputDefault";
 import Button from "@/components/forms/button";
 import NavButton from "@/components/layout/navigationButton";
-import useCultivarForm from "@/app/hooks/useCultivarForm";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { cropsService } from "@/services/crops";
 
-interface Props {
-    params: { id: string }
-}
+const CriarCultivar = ({ params }: { params: { id: string } }) => {
+    const [name, setName] = useState('');
+    const [message, setMessage] = useState('');
+    const router = useRouter();
 
-const CriarCultivar = ({ params }: Props) => {
-    const {
-        name,
-        setName,
-        cadastroCultivar
-    } = useCultivarForm(params.id);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        let session = sessionStorage.getItem('@token');
+
+        if (session) {
+            const service = new cropsService(session);
+            const response = await service.createCultivar(params.id, { name });
+            if (response && response.status === 1) {
+                setName('');
+                setTimeout(() => {
+                    setMessage('');
+                    router.push(`/cultivars/${params.id}`);
+                }, 1000);
+            }
+        } else {
+            sessionStorage.setItem('mensagem', `{"mensagem":"Você não possui permissões para acessar essa pagina !","tipo":"danger"}`);
+            router.push('/');
+        }
+    };
 
     return (
         <Layout>
-            <div className="cropsPage">
-                <div className="list-crops">
-                    <form className="formBody-login">
-                        <div className="form-input-box">
-                            <h2 className="tittle-login">Cadastrar cultivar</h2>
-                        </div>
-
-                        <InputDefault
-                            classe="form-input-box"
-                            label="Nome Cultivar"
-                            placeholder="Nome Cultivar"
-                            value={name}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                            type={'text'}
-                        />
-
-                        <br />
-                        <div className="form-input-box">
-                            <Button texto={'Cadastrar'} classe={'button-home'} onclick={cadastroCultivar} />
-                            <NavButton Url={`/cultivars/${params.id}`} page="form" text="Voltar" type="voltar" />
-                        </div>
-
-                    </form>
-                </div>
-
-            </div>
+            <form className="form-container" onSubmit={handleSubmit}>
+                {message && <div className="success-message">{message}</div>}
+                <h2 className="form-title">Cadastrar cultivar</h2>
+                <InputDefault
+                    classe="form-input-box"
+                    label="Nome Cultivar"
+                    placeholder="Nome Cultivar"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    type="text"
+                />
+                <Button texto="Cadastrar" classe="form-button" type="submit" />
+                <NavButton Url={`/cultivars/${params.id}`} page="form" text="Voltar" type="voltar" />
+            </form>
         </Layout>
     );
-}
+};
 
 export default CriarCultivar;

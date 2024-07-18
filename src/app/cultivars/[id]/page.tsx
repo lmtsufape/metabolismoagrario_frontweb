@@ -9,34 +9,35 @@ import { cropsService } from "@/services/crops";
 import Image from "next/image";
 import NavButton from "@/components/layout/navigationButton";
 import { cultivarsData } from "@/types/cultivarTypes";
+import useHandleDeleteConstant from '@/app/hooks/useHandleDeleteConstant';
 
 interface Props {
     params: { id: string }
 }
 
 const Cultivars = ({ params }: Props) => {
-    const [dados, setDados] = useState<cultivarsData[]>([])
-    const [titulo, setTitulo] = useState<string | any>('')
+    const [dados, setDados] = useState<cultivarsData[]>([]);
+    const [titulo, setTitulo] = useState<string | any>('');
+
+    const { handleDelete } = useHandleDeleteConstant(dados, setDados);
 
     useEffect(() => {
-        let session = sessionStorage.getItem('@token')
+        let session = sessionStorage.getItem('@token');
 
         if (session) {
-            const service = new cropsService(session)
+            const service = new cropsService(session);
 
             service.findOne(params.id).then((response) => {
-                setDados(response.cultivars)
-                setTitulo(response.name)
-            })
-
-
+                if (response && response.cultivars) {
+                    setDados(response.cultivars);
+                }
+                setTitulo(response.name);
+            });
         } else {
-            sessionStorage.setItem('mensagem', `{"mensagem":"Você não possui permissões para acessar essa pagina !","tipo":"danger"}`)
-            redirect('/')
+            sessionStorage.setItem('mensagem', `{"mensagem":"Você não possui permissões para acessar essa pagina !","tipo":"danger"}`);
+            redirect('/');
         }
-
-    }, [])
-
+    }, [params.id]);
     return (
         <Layout>
             <div className="cropsPage">
@@ -49,23 +50,19 @@ const Cultivars = ({ params }: Props) => {
                     </div>
 
                     <div className="header-list">
-
                         <div className="header-col-nameCultivar">
                             Nome
                         </div>
-
                         <div className="header-col-acoesCultivar">
                             Ações
                         </div>
-
                     </div>
-                    {
+                    {dados.length > 0 ? (
                         dados.map((e: cultivarsData) => (
                             <div key={e.id} className="content-list">
                                 <div className="result-col-nameCultivar">
                                     {e.name}
                                 </div>
-
                                 <div className="result-col-acoesCultivar">
                                     <a href={`/constant/${e.id}`}>
                                         <Image
@@ -75,7 +72,6 @@ const Cultivars = ({ params }: Props) => {
                                             height={20}
                                         />
                                     </a>
-
                                     <Image
                                         src={"/edit.svg"}
                                         alt="Editar"
@@ -87,16 +83,20 @@ const Cultivars = ({ params }: Props) => {
                                         alt="excluir"
                                         width={20}
                                         height={20}
+                                        onClick={() => handleDelete(e.id, 'cultivar')}
                                     />
                                 </div>
-
                             </div>
                         ))
-                    }
+                    ) : (
+                        <div className="content-list">
+                            <div className="result-col-nameCultivar">
+                                Nenhuma cultivar cadastrada.
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
-
-
         </Layout>
     );
 }

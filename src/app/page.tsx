@@ -5,46 +5,20 @@ import Button from "@/components/forms/button";
 import InputDefault from "@/components/forms/inputDefault";
 import '../styles/form/form.css'
 import '../styles/home/login.css'
-import { useState } from "react";
-import Auth from "@/services/auth";
-import { redirect } from "next/navigation";
+import useHome from "../app/hooks/useHome"
 
 //pagina de login 
 
+
 const Home = () => {
-  const auth = new Auth
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [statusResponse, setStatusResponse] = useState('')
-
-
-  const loginEvento = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email) {
-      sessionStorage.setItem('mensagem', `{"mensagem":"Para realizar o login você deve informar o e-mail !","tipo":"danger"}`)
-      location.reload()
-    } else if (!password) {
-      sessionStorage.setItem('mensagem', `{"mensagem":"Para realizar o login você deve informar a senha !","tipo":"danger"}`)
-      location.reload()
-    } else {
-      //requisicao
-      const dadosLogin = {
-        email: email,
-        password: password,
-      };
-
-
-      const response: any = await auth.login(dadosLogin);
-      setStatusResponse(response.status)
-    }
-
-  }
-
-  if (statusResponse == "1") {
-    redirect('/home')
-  } else {
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loginEvento
+  } = useHome();
+  {
     return (
       <Layout>
 
